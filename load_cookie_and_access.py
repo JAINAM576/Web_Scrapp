@@ -10,6 +10,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from time import sleep
+from pymongo import MongoClient
+
 from flask import Flask
 import os
 import json
@@ -24,17 +26,23 @@ def load_cookies_and_access_instagram(chance,cookie_file=r"./instagram_cookies.p
 
     # Construct the full path to the file
     file_path = os.path.join(basedir, 'backend', 'data.db')
-    driver = webdriver.Chrome()
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+
+
+    driver = webdriver.Chrome(chrome_options)
 
     driver.get("https://www.instagram.com/")
     time.sleep(3)
 
     # Load cookies from file
-    conn = sqlite3.connect(file_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT data FROM DataStore WHERE id = ?', (1,))
-    data_json = cursor.fetchone()[0]
-    conn.close()
+    client = MongoClient('mongodb+srv://jainamsanghavi:jainam@cluster0.sc4tif8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
+    db = client['data_store']
+    collection = db['data']
+    document = collection.find_one()
+    data_json = document['data']
 
     # Convert the JSON string back to Python data structure
     cookies = json.loads(data_json)   
